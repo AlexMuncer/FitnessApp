@@ -5,6 +5,7 @@
 const state = {
   view: "plan",
   selectedWeek: null,
+  progressWeek: null,
   sheet: null, // {type:'note'|'move'|'actions', day}
 };
 
@@ -370,11 +371,34 @@ function openWorkout(dateISO) {
   const day = getDayByDate(dateISO);
   const eff = getEffectiveWeekDays(day.weekNumber).find((d) => d.date === dateISO);
   const session = STRENGTH_SESSIONS[eff.sessionId];
-  workoutState = { dateISO, session, index: 0, finished: false };
+  const log = getLog(dateISO);
+  let index = 0;
+  if (log && log.status === "in_progress" && typeof log.currentIndex === "number") {
+    index = Math.max(0, Math.min(log.currentIndex, session.exercises.length - 1));
+  }
+  workoutState = { dateISO, session, index, finished: false };
   renderWorkout();
 }
 
+/** Reads the currently-visible per-set inputs off the DOM for the exercise on screen. */
+function captureCurrentExerciseInputs() {
+  const { session, index } = workoutState;
+  const ex = session.exercises[index];
+  const sets = [];
+  for (let s = 0; s < ex.sets; s++) {
+    const w = document.getElementById(`log-weight-${s}`);
+    const r = document.getElementById(`log-reps-${s}`);
+    sets.push({ weight: w ? w.value : "", reps: r ? r.value : "" });
+  }
+  return { ex, sets };
+}
+
 function closeWorkout() {
+  if (workoutState && !workoutState.finished) {
+    const { ex, sets } = captureCurrentExerciseInputs();
+    setExerciseSets(workoutState.dateISO, ex.id, sets);
+    setWorkoutCurrentIndex(workoutState.dateISO, workoutState.index);
+  }
   workoutState = null;
   document.getElementById("workout-overlay").classList.add("hidden");
   render();
@@ -393,8 +417,7 @@ function renderWorkout() {
   const { session, index, dateISO } = workoutState;
   const total = session.exercises.length;
   const ex = session.exercises[index];
-  const log = getLog(dateISO);
-  const existing = (log && log.exercises[ex.id]) || { weight: "", reps: "", done: false };
+  const existingSets = getExerciseSets(dateISO, ex.id, ex.sets);
 
   const header = el(`
     <div class="workout-header">
@@ -443,12 +466,17 @@ function renderWorkout() {
   ex.alt.cues.forEach((c) => altBox.querySelector("ul").appendChild(el(`<li>${c}</li>`)));
   body.appendChild(altBox);
 
-  const logForm = el(`
-    <div class="log-form">
-      <div class="log-field"><label>Weight (kg)</label><input type="number" inputmode="decimal" id="log-weight" value="${existing.weight}" placeholder="e.g. 14" /></div>
-      <div class="log-field"><label>Reps done</label><input type="number" inputmode="numeric" id="log-reps" value="${existing.reps}" placeholder="e.g. 10" /></div>
-    </div>
-  `);
+  const logForm = el(`<div class="log-form-sets"></div>`);
+  for (let s = 0; s < ex.sets; s++) {
+    const setRow = el(`
+      <div class="log-set-row">
+        <span class="log-set-label">Set ${s + 1}</span>
+        <div class="log-field"><label>Weight (kg)</label><input type="number" inputmode="decimal" id="log-weight-${s}" value="${existingSets[s].weight}" placeholder="e.g. 14" /></div>
+        <div class="log-field"><label>Reps done</label><input type="number" inputmode="numeric" id="log-reps-${s}" value="${existingSets[s].reps}" placeholder="e.g. 10" /></div>
+      </div>
+    `);
+    logForm.appendChild(setRow);
+  }
   body.appendChild(logForm);
 
   if (index === total - 1) {
@@ -462,19 +490,25 @@ function renderWorkout() {
   const footer = el(`<div class="workout-footer"></div>`);
   if (index > 0) {
     const back = el(`<button class="btn btn-ghost">Back</button>`);
-    back.addEventListener("click", () => { workoutState.index--; renderWorkout(); });
+    back.addEventListener("click", () => {
+      const { ex: curEx, sets } = captureCurrentExerciseInputs();
+      setExerciseSets(dateISO, curEx.id, sets);
+      workoutState.index--;
+      setWorkoutCurrentIndex(dateISO, workoutState.index);
+      renderWorkout();
+    });
     footer.appendChild(back);
   }
   const nextLabel = index === total - 1 ? "Completed ✓ — Finish" : "Completed ✓ — Next";
   const next = el(`<button class="btn btn-primary" style="flex:1;">${nextLabel}</button>`);
   next.addEventListener("click", () => {
-    const weight = document.getElementById("log-weight").value;
-    const reps = document.getElementById("log-reps").value;
-    setExerciseResult(dateISO, ex.id, { weight, reps, done: true });
+    const { ex: curEx, sets } = captureCurrentExerciseInputs();
+    setExerciseSets(dateISO, curEx.id, sets, true);
     if (index === total - 1) {
       workoutState.finished = true;
     } else {
       workoutState.index++;
+      setWorkoutCurrentIndex(dateISO, workoutState.index);
     }
     renderWorkout();
   });
@@ -521,24 +555,29 @@ function getExerciseNameMap() {
 }
 
 function renderProgressView(root) {
-  const today = getTodayISO();
-  const scheduled = PROGRAMME_DAYS.filter((d) => d.date <= today);
+  // Count sessions in every week up to and including the current programme week
+  // (not just calendar days already in the past) — a week's sessions all count
+  // toward the total as soon as that week has started, whether or not each one
+  // has been done yet, so early completions and the current week's tally don't
+  // get hidden just because "today" hasn't caught up with them.
+  const actualWeek = getActualCurrentWeekNumber();
 
   let strengthTotal = 0, strengthDone = 0, spinTotal = 0, spinDone = 0;
   const weekStats = {};
 
   for (let w = 1; w <= 8; w++) {
-    const days = getEffectiveWeekDays(w).filter((d) => d.date <= today);
     let total = 0, done = 0;
-    days.forEach((d) => {
-      if (d.displayType === "strength") {
-        strengthTotal++; total++;
-        if (isWorkoutCompleted(d.date)) { strengthDone++; done++; }
-      } else if (d.displayType === "spin") {
-        spinTotal++; total++;
-        if (isSpinBooked(d.date)) { spinDone++; done++; }
-      }
-    });
+    if (w <= actualWeek) {
+      getEffectiveWeekDays(w).forEach((d) => {
+        if (d.displayType === "strength") {
+          strengthTotal++; total++;
+          if (isWorkoutCompleted(d.date)) { strengthDone++; done++; }
+        } else if (d.displayType === "spin") {
+          spinTotal++; total++;
+          if (isSpinBooked(d.date)) { spinDone++; done++; }
+        }
+      });
+    }
     weekStats[w] = { total, done };
   }
 
@@ -553,7 +592,7 @@ function renderProgressView(root) {
   grid.appendChild(el(`<div class="stat-card"><div class="stat-value">${strengthDone}/${strengthTotal}</div><div class="stat-label">Strength Sessions</div></div>`));
   grid.appendChild(el(`<div class="stat-card"><div class="stat-value">${spinDone}/${spinTotal}</div><div class="stat-label">Spin / Cardio</div></div>`));
   grid.appendChild(el(`<div class="stat-card"><div class="stat-value">${totalDone}/${totalSessions}</div><div class="stat-label">Total Completed</div></div>`));
-  grid.appendChild(el(`<div class="stat-card"><div class="stat-value">${consistency}%</div><div class="stat-label">Consistency</div></div>`));
+  grid.appendChild(el(`<div class="stat-card" title="Sessions completed ÷ sessions scheduled so far, this programme"><div class="stat-value">${consistency}%</div><div class="stat-label">Consistency</div></div>`));
   wrap.appendChild(grid);
 
   wrap.appendChild(el(`<div class="section-title">Weekly Completion</div>`));
@@ -568,20 +607,41 @@ function renderProgressView(root) {
   wrap.appendChild(weekRow);
 
   wrap.appendChild(el(`<div class="section-title">Strength Progression</div>`));
+
+  if (!state.progressWeek) state.progressWeek = actualWeek;
+  const weekTabs = el(`<div class="week-selector"></div>`);
+  for (let w = 1; w <= 8; w++) {
+    const pill = el(`<button class="week-pill ${w === state.progressWeek ? "active" : ""}">W${w}</button>`);
+    pill.addEventListener("click", () => {
+      state.progressWeek = w;
+      render();
+    });
+    weekTabs.appendChild(pill);
+  }
+  wrap.appendChild(weekTabs);
+
   const nameMap = getExerciseNameMap();
-  const idsWithHistory = Object.keys(nameMap).filter((id) => getExerciseHistory(id).length > 0);
+  const weekDates = new Set(getEffectiveWeekDays(state.progressWeek).map((d) => d.date));
+  const idsWithHistory = Object.keys(nameMap).filter((id) =>
+    getExerciseHistory(id).some((h) => weekDates.has(h.date))
+  );
 
   if (idsWithHistory.length === 0) {
-    wrap.appendChild(el(`<div class="empty-state">Complete your first strength session and your logged weights/reps will show up here.</div>`));
+    wrap.appendChild(el(`<div class="empty-state">No strength data logged for Week ${state.progressWeek} yet — complete a session that week and your logged sets will show up here.</div>`));
   } else {
     idsWithHistory.forEach((id) => {
-      const history = getExerciseHistory(id).slice(-5).reverse();
+      const history = getExerciseHistory(id).filter((h) => weekDates.has(h.date));
       const card = el(`<div class="exercise-history-card"><div class="exercise-history-name">${nameMap[id]}</div><div class="exercise-history-list"></div></div>`);
       const list = card.querySelector(".exercise-history-list");
       history.forEach((h) => {
         const d = getDayByDate(h.date);
         const label = d ? formatShortDate(d) : h.date;
-        list.appendChild(el(`<div class="exercise-history-row"><span>${label}</span><b>${h.weight || "–"}kg × ${h.reps || "–"}</b></div>`));
+        const dayRow = el(`<div class="exercise-history-day"><div class="exercise-history-date">${label}</div><div class="exercise-history-sets"></div></div>`);
+        const setsWrap = dayRow.querySelector(".exercise-history-sets");
+        h.sets.forEach((s, i) => {
+          setsWrap.appendChild(el(`<div class="exercise-history-set"><span>Set ${i + 1}</span><b>${s.weight || "–"}kg × ${s.reps || "–"}</b></div>`));
+        });
+        list.appendChild(dayRow);
       });
       wrap.appendChild(card);
     });

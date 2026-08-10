@@ -9,7 +9,7 @@ const STORAGE_KEY = "fitnessapp_state_v1";
 
 function defaultState() {
   return {
-    logs: {},        // dateISO -> { status: 'completed'|'skipped', exercises: {exId: {weight,reps,done}}, completedAt }
+    logs: {},        // dateISO -> { status: 'completed'|'skipped'|'in_progress', exercises: {exId: {sets:[{weight,reps}], done}}, currentIndex, completedAt }
     spinBooked: {},   // dateISO -> true
     notes: {},        // dateISO -> string
     moves: {},         // dateISO (source) -> targetDateISO
@@ -55,11 +55,36 @@ function ensureLog(dateISO) {
   return _state.logs[dateISO];
 }
 
-function setExerciseResult(dateISO, exerciseId, patch) {
+/** Reads back the per-set weight/reps for an exercise, padded/truncated to numSets rows.
+    Also understands the legacy single {weight,reps} shape so older saved sessions still display. */
+function getExerciseSets(dateISO, exerciseId, numSets) {
+  const log = getLog(dateISO);
+  const ex = log && log.exercises[exerciseId];
+  const sets = [];
+  for (let i = 0; i < numSets; i++) {
+    if (ex && Array.isArray(ex.sets) && ex.sets[i]) {
+      sets.push({ weight: ex.sets[i].weight || "", reps: ex.sets[i].reps || "" });
+    } else if (i === 0 && ex && !Array.isArray(ex.sets) && (ex.weight || ex.reps)) {
+      sets.push({ weight: ex.weight || "", reps: ex.reps || "" });
+    } else {
+      sets.push({ weight: "", reps: "" });
+    }
+  }
+  return sets;
+}
+
+function setExerciseSets(dateISO, exerciseId, sets, done) {
   const log = ensureLog(dateISO);
-  log.exercises[exerciseId] = { ...(log.exercises[exerciseId] || { weight: "", reps: "", done: false }), ...patch };
+  const prevDone = log.exercises[exerciseId] ? !!log.exercises[exerciseId].done : false;
+  log.exercises[exerciseId] = { sets, done: typeof done === "boolean" ? done : prevDone };
   saveState();
   return log;
+}
+
+function setWorkoutCurrentIndex(dateISO, index) {
+  const log = ensureLog(dateISO);
+  log.currentIndex = index;
+  saveState();
 }
 
 function markWorkoutCompleted(dateISO) {
@@ -163,8 +188,15 @@ function getExerciseHistory(exerciseId) {
   const rows = [];
   for (const [dateISO, log] of Object.entries(_state.logs)) {
     const ex = log.exercises[exerciseId];
-    if (ex && (ex.weight || ex.reps)) {
-      rows.push({ date: dateISO, ...ex });
+    if (!ex) continue;
+    let sets = [];
+    if (Array.isArray(ex.sets)) {
+      sets = ex.sets;
+    } else if (ex.weight || ex.reps) {
+      sets = [{ weight: ex.weight || "", reps: ex.reps || "" }];
+    }
+    if (sets.some((s) => s.weight || s.reps)) {
+      rows.push({ date: dateISO, sets, done: !!ex.done });
     }
   }
   return rows.sort((a, b) => a.date.localeCompare(b.date));
