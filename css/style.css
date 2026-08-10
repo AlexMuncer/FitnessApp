@@ -1,0 +1,450 @@
+/* ============================================================
+   THEME TOKENS
+   ============================================================ */
+:root {
+  --bg: #f4f5f7;
+  --bg-elevated: #ffffff;
+  --card: #ffffff;
+  --card-border: #e6e8eb;
+  --text: #14181b;
+  --text-muted: #6b7280;
+  --text-faint: #9aa1a9;
+  --accent: #0f766e;
+  --accent-strong: #0b5c55;
+  --accent-soft: #e6f4f2;
+  --accent-contrast: #ffffff;
+  --success: #16a34a;
+  --success-soft: #e8f7ec;
+  --warn: #d97706;
+  --warn-soft: #fef3e2;
+  --danger: #dc2626;
+  --holiday: #8b8f99;
+  --holiday-soft: #eceef1;
+  --shadow: 0 1px 2px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d0f;
+    --bg-elevated: #16191c;
+    --card: #16191c;
+    --card-border: #26292e;
+    --text: #f2f3f5;
+    --text-muted: #9aa1a9;
+    --text-faint: #6b7280;
+    --accent: #2dd4bf;
+    --accent-strong: #5eead4;
+    --accent-soft: #113330;
+    --accent-contrast: #05201d;
+    --success: #4ade80;
+    --success-soft: #10301c;
+    --warn: #fbbf24;
+    --warn-soft: #362a0c;
+    --danger: #f87171;
+    --holiday: #71767f;
+    --holiday-soft: #1d2024;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.35);
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+button, input { font-family: inherit; }
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding-top: var(--safe-top);
+  border-bottom: 1px solid var(--card-border);
+}
+.app-header-inner {
+  padding: 14px 20px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.app-title { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+.app-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.view-root {
+  flex: 1;
+  padding: 16px 16px calc(96px + var(--safe-bottom));
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   BOTTOM NAV
+   ============================================================ */
+.bottom-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: flex;
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--card-border);
+  padding-bottom: var(--safe-bottom);
+}
+.nav-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 10px 4px calc(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-faint);
+  font-weight: 600;
+  font-size: 11px;
+  min-height: 56px;
+  cursor: pointer;
+}
+.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
+.nav-btn.active { color: var(--accent); }
+
+/* ============================================================
+   WEEK SELECTOR
+   ============================================================ */
+.week-selector {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 14px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+.week-selector::-webkit-scrollbar { display: none; }
+.week-pill {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 13.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  min-height: 40px;
+}
+.week-pill.active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+
+.phase-banner {
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+.phase-banner b { color: var(--accent-strong); font-weight: 700; }
+
+/* ============================================================
+   REMINDER BANNER
+   ============================================================ */
+.reminder-banner {
+  background: var(--warn-soft);
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reminder-banner .reminder-icon { font-size: 22px; }
+.reminder-banner .reminder-text { flex: 1; font-size: 13.5px; line-height: 1.4; }
+.reminder-banner .reminder-text b { display: block; font-size: 14px; margin-bottom: 2px; }
+.reminder-banner button {
+  border: none; background: var(--warn); color: #1a1200;
+  font-weight: 700; font-size: 12.5px; padding: 9px 14px; border-radius: 999px;
+  white-space: nowrap; cursor: pointer;
+}
+
+/* ============================================================
+   DAY CARDS
+   ============================================================ */
+.day-list { display: flex; flex-direction: column; gap: 12px; }
+
+.day-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.day-card.is-today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.day-card.is-holiday { background: var(--holiday-soft); box-shadow: none; }
+.day-card.is-past-missed { opacity: 0.6; }
+
+.day-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.day-card-date {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.day-card.is-today .day-card-date { color: var(--accent); }
+.today-chip {
+  background: var(--accent); color: var(--accent-contrast);
+  font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.status-chip {
+  font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px;
+}
+.status-chip.done { background: var(--success-soft); color: var(--success); }
+.status-chip.skipped { background: var(--holiday-soft); color: var(--text-muted); }
+.status-chip.booked { background: var(--success-soft); color: var(--success); }
+
+.day-card-body { display: flex; align-items: center; gap: 12px; }
+.day-card-emoji { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+.day-card-info { flex: 1; min-width: 0; }
+.day-card-title { font-weight: 800; font-size: 16.5px; margin: 0 0 2px; }
+.day-card-meta { font-size: 13px; color: var(--text-muted); line-height: 1.35; }
+
+.day-card-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 11px 16px;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent); color: var(--accent-contrast); flex: 1; }
+.btn-secondary { background: var(--accent-soft); color: var(--accent-strong); }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--card-border); }
+.btn-done { background: var(--success-soft); color: var(--success); flex: 1; }
+.btn-sm { padding: 8px 12px; font-size: 12.5px; min-height: 36px; border-radius: 10px; }
+.btn:active { transform: scale(0.97); }
+
+.day-card-note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.day-card-menu-btn {
+  border: none; background: none; color: var(--text-faint);
+  font-size: 18px; padding: 4px 8px; cursor: pointer; min-height: 32px;
+}
+
+/* ============================================================
+   TODAY HERO (dashboard top card, current week only)
+   ============================================================ */
+.today-hero {
+  margin-bottom: 18px;
+}
+.today-hero-label {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-faint); margin: 0 0 8px 2px;
+}
+
+/* ============================================================
+   PROGRESS VIEW
+   ============================================================ */
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-md);
+  padding: 14px; box-shadow: var(--shadow);
+}
+.stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+.section-title {
+  font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); margin: 22px 2px 10px;
+}
+
+.week-progress-row { display: flex; gap: 6px; margin-bottom: 18px; }
+.week-progress-dot {
+  flex: 1; height: 34px; border-radius: 9px; background: var(--card-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: var(--text-faint);
+}
+.week-progress-dot.complete { background: var(--success); color: #06280f; }
+.week-progress-dot.partial { background: var(--warn); color: #2a1c00; }
+
+.exercise-history-card {
+  background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-md);
+  padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.exercise-history-name { font-weight: 700; font-size: 14.5px; margin-bottom: 6px; }
+.exercise-history-list { display: flex; flex-direction: column; gap: 4px; }
+.exercise-history-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); }
+.exercise-history-row b { color: var(--text); }
+.empty-state { color: var(--text-faint); font-size: 13.5px; padding: 20px 4px; text-align: center; line-height: 1.5; }
+
+/* ============================================================
+   WORKOUT MODE (full-screen overlay)
+   ============================================================ */
+.workout-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  padding-top: var(--safe-top);
+}
+.workout-overlay.hidden { display: none; }
+
+.workout-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--card-border);
+}
+.workout-close { border: none; background: var(--card-border); color: var(--text); width: 36px; height: 36px; border-radius: 999px; font-size: 16px; cursor: pointer; }
+.workout-progress-label { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+
+.workout-progress-bar {
+  height: 4px; background: var(--card-border); margin: 0 16px;
+  border-radius: 3px; overflow: hidden;
+}
+.workout-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.25s ease; }
+
+.workout-body {
+  flex: 1; overflow-y: auto; padding: 20px 18px calc(24px + var(--safe-bottom));
+}
+
+.workout-exercise-name { font-size: 24px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
+.workout-exercise-muscles { font-size: 13.5px; color: var(--accent-strong); font-weight: 700; margin-bottom: 14px; }
+
+.workout-spec-row {
+  display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.workout-spec {
+  background: var(--card); border: 1px solid var(--card-border); border-radius: 12px;
+  padding: 10px 14px; text-align: center; flex: 1; min-width: 84px;
+}
+.workout-spec-value { font-size: 16px; font-weight: 800; }
+.workout-spec-label { font-size: 10.5px; color: var(--text-faint); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+.workout-block { margin-bottom: 18px; }
+.workout-block-title { font-size: 12.5px; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.workout-cue-list { margin: 0; padding-left: 18px; font-size: 14.5px; line-height: 1.65; color: var(--text); }
+.workout-cue-list li { margin-bottom: 3px; }
+
+.workout-alt-box {
+  background: var(--accent-soft); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 18px;
+}
+.workout-alt-title { font-size: 12px; font-weight: 800; color: var(--accent-strong); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
+.workout-alt-name { font-weight: 700; font-size: 14.5px; margin-bottom: 6px; }
+
+.log-form { display: flex; gap: 10px; margin-bottom: 10px; }
+.log-field { flex: 1; }
+.log-field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-faint); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.03em; }
+.log-field input {
+  width: 100%; border: 1px solid var(--card-border); background: var(--bg-elevated); color: var(--text);
+  border-radius: 10px; padding: 12px; font-size: 16px; font-weight: 600;
+}
+
+.workout-footer {
+  padding: 14px 18px calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--card-border);
+  display: flex; gap: 10px;
+  background: var(--bg);
+}
+
+.workout-complete-screen {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+}
+.workout-complete-emoji { font-size: 56px; margin-bottom: 12px; }
+.workout-complete-title { font-size: 24px; font-weight: 800; margin: 0 0 8px; }
+.workout-complete-sub { font-size: 14.5px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5; }
+
+/* ============================================================
+   NOTE MODAL (lightweight)
+   ============================================================ */
+.sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 90;
+  display: flex; align-items: flex-end;
+}
+.sheet-backdrop.hidden { display: none; }
+.sheet {
+  background: var(--bg-elevated); width: 100%; border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(24px + var(--safe-bottom));
+}
+.sheet h3 { margin: 0 0 12px; font-size: 17px; }
+.sheet textarea {
+  width: 100%; min-height: 90px; border-radius: 12px; border: 1px solid var(--card-border);
+  background: var(--bg); color: var(--text); padding: 12px; font-size: 15px; resize: vertical; font-family: inherit;
+}
+.sheet-actions { display: flex; gap: 10px; margin-top: 14px; }
+.sheet-move-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.sheet-move-option {
+  text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--card-border);
+  background: var(--card); font-weight: 600; font-size: 14px; cursor: pointer;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + var(--safe-bottom));
+  transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+  z-index: 200; box-shadow: var(--shadow);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
+
+@media (min-width: 560px) {
+  .view-root { padding-left: 20px; padding-right: 20px; }
+}
