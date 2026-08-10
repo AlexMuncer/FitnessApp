@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Strength &amp; Spin</title>
+<meta name="description" content="Your 8-week strength and spin training programme." />
+
+<!-- PWA / iOS home screen -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0f766e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Strength & Spin" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="app">
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <h1 class="app-title">Strength &amp; Spin</h1>
+      <span class="app-subtitle" id="header-subtitle">8-week programme</span>
+    </div>
+  </header>
+
+  <!-- ============ MAIN VIEWS ============ -->
+  <main id="view-root" class="view-root"></main>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn" data-view="plan" aria-label="Plan">
+      <span class="nav-icon" aria-hidden="true">📅</span>
+      <span class="nav-label">Plan</span>
+    </button>
+    <button class="nav-btn" data-view="progress" aria-label="Progress">
+      <span class="nav-icon" aria-hidden="true">📈</span>
+      <span class="nav-label">Progress</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ============ WORKOUT MODE (full-screen overlay) ============ -->
+<div id="workout-overlay" class="workout-overlay hidden"></div>
+
+<!-- ============ TOAST ============ -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
